@@ -54,7 +54,7 @@ button,.btn{background:var(--panel);color:var(--text);border:0;border-radius:20p
 <header>
   <h1>My Player</h1>
   <button id="urlBtn">🔗 URL</button>
-  <label class="btn primary">＋ 曲を追加<input id="file" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.flac" multiple hidden></label>
+  <label class="btn primary">＋ 曲を追加<input id="file" type="file" accept="audio/*,video/mp4,.mp3,.m4a,.mp4,.aac,.wav,.flac" multiple hidden></label>
 </header>
 <div class="tabs" id="tabs"></div>
 <input class="search" id="q" type="search" placeholder="曲名・アーティストで検索">
@@ -175,7 +175,7 @@ $('urlBtn').onclick = async () => {
     const r = await fetch(url);
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const blob = await r.blob();
-    if (!/audio|octet-stream/.test(blob.type) && !/\.(mp3|m4a|aac|wav|flac|ogg)(\?|$)/i.test(url)) throw new Error('音声ファイルではないようです');
+    if (!/audio|video\/mp4|octet-stream/.test(blob.type) && !/\.(mp3|m4a|mp4|aac|wav|flac|ogg)(\?|$)/i.test(url)) throw new Error('音声ファイルではないようです');
     const name = decodeURIComponent(url.split('?')[0].split('/').pop() || 'track');
     const f = new File([blob], name, { type: blob.type || 'audio/mpeg' });
     const tag = await readTags(f);
