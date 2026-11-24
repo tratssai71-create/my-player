@@ -53,6 +53,7 @@ button,.btn{background:var(--panel);color:var(--text);border:0;border-radius:20p
 <body>
 <header>
   <h1>My Player</h1>
+  <button id="urlBtn">🔗 URL</button>
   <label class="btn primary">＋ 曲を追加<input id="file" type="file" accept="audio/*,.mp3,.m4a,.aac,.wav,.flac" multiple hidden></label>
 </header>
 <div class="tabs" id="tabs"></div>
@@ -165,6 +166,25 @@ $('file').addEventListener('change', async e => {
   await load();
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
 });
+
+$('urlBtn').onclick = async () => {
+  const url = prompt('音楽ファイルのURL(mp3/m4aなど、使用が許可された音源のみ)');
+  if (!url) return;
+  const btn = $('urlBtn'); btn.textContent = '取得中…'; btn.disabled = true;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const blob = await r.blob();
+    if (!/audio|octet-stream/.test(blob.type) && !/\.(mp3|m4a|aac|wav|flac|ogg)(\?|$)/i.test(url)) throw new Error('音声ファイルではないようです');
+    const name = decodeURIComponent(url.split('?')[0].split('/').pop() || 'track');
+    const f = new File([blob], name, { type: blob.type || 'audio/mpeg' });
+    const tag = await readTags(f);
+    await DB.put('tracks', { title: tag.title, artist: tag.artist, cover: tag.cover, blob: f, type: f.type, fav: false, added: Date.now() });
+    await load();
+  } catch (e) {
+    alert('追加できませんでした: ' + e.message + '\n\n配信元が他サイトからの取り込みを許可していない場合、URLからは追加できません。その場合は一度ダウンロードして「＋ 曲を追加」から入れてください。');
+  } finally { btn.textContent = '🔗 URL'; btn.disabled = false; }
+};
 
 async function load() {
   tracks = (await DB.all('tracks')).sort((a, b) => a.added - b.added);
